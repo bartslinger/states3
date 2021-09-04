@@ -12,20 +12,31 @@ pub enum State {
 }
 
 #[derive(Debug)]
+pub struct Context {
+    x: u32,
+}
+
+#[derive(Debug)]
 pub enum Event {
     Yolo,
     SomeAbortEvent,
+    Unintersting,
 }
 
 #[tokio::main]
 async fn main() {
+    let context = Context {
+        x: 0,
+    };
 
     let (tx, rx) = tokio::sync::mpsc::channel::<Event>(10);
 
     let _ = tx.send(Event::Yolo).await;
-    let _ = tx.send(Event::Yolo).await;
+    let _ = tx.send(Event::Unintersting).await;
+    let _ = tx.send(Event::SomeAbortEvent).await;
+
     let simple_test_machine = SimpleTestMachine::new();
-    simple_test_machine.run(rx).await;
+    simple_test_machine.run(context, rx).await;
 }
 
 // use core::fmt::Debug;
