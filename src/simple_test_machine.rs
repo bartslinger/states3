@@ -1,4 +1,24 @@
-use crate::{State, Context, Event};
+use tokio_stream::{StreamExt};
+
+#[derive(Debug, Clone, Copy)]
+pub enum State {
+    Initial,
+    Second,
+    Done,
+    Error,
+}
+
+#[derive(Debug)]
+pub struct Context {
+    pub x: u32,
+}
+
+#[derive(Debug)]
+pub enum Event {
+    Yolo,
+    SomeAbortEvent,
+    Unintersting,
+}
 
 struct InitialState {
     on_done: State,
@@ -85,5 +105,36 @@ impl SimpleTestMachine {
         }
 
         State::Done
+    }
+}
+
+pub async fn run() {
+    let context = Context {
+        x: 0,
+    };
+
+    let (tx, rx) = tokio::sync::mpsc::channel::<Event>(10);
+
+    let _ = tx.send(Event::Yolo).await;
+
+    let simple_test_machine = SimpleTestMachine::new();
+    tokio::spawn(async move {
+        simple_test_machine.run(context, rx).await
+    });
+
+    let stdin = tokio::io::stdin();
+    let mut reader = tokio_util::codec::FramedRead::new(stdin, tokio_util::codec::LinesCodec::new());
+    loop {
+        let line = reader.next().await;
+        match line {
+            Some(Ok(s)) => {
+                match s.as_str() {
+                    "a" => { let _ = tx.send(Event::SomeAbortEvent).await; },
+                    _ => {},
+
+                }
+            },
+            _ => {},
+        }
     }
 }
