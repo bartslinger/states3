@@ -13,7 +13,7 @@ impl InitialState {
         let handle = tokio::spawn(async move {
             loop {
                 println!("In the invoked task");
-                tokio::time::sleep(tokio::time::Duration::from_millis(3000)).await;
+                tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
 
                 // Safe abort point
                 if let Ok(_) = abort_rx.try_recv() { 

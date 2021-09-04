@@ -1,4 +1,5 @@
 #![allow(unused_variables, dead_code, unreachable_code)]
+use tokio_stream::{StreamExt};
 
 mod simple_test_machine;
 use simple_test_machine::SimpleTestMachine;
@@ -32,11 +33,30 @@ async fn main() {
     let (tx, rx) = tokio::sync::mpsc::channel::<Event>(10);
 
     let _ = tx.send(Event::Yolo).await;
-    let _ = tx.send(Event::Unintersting).await;
-    let _ = tx.send(Event::SomeAbortEvent).await;
 
     let simple_test_machine = SimpleTestMachine::new();
-    simple_test_machine.run(context, rx).await;
+    tokio::spawn(async move {
+        simple_test_machine.run(context, rx).await
+    });
+
+    let stdin = tokio::io::stdin();
+    let mut reader = tokio_util::codec::FramedRead::new(stdin, tokio_util::codec::LinesCodec::new());
+    loop {
+        let line = reader.next().await;
+        match line {
+            Some(Ok(s)) => {
+                match s.as_str() {
+                    "a" => { let _ = tx.send(Event::SomeAbortEvent).await; },
+                    _ => {},
+
+                }
+            },
+            _ => {},
+        }
+        //let _ = tx.send(0).await;
+    }
+
+
 }
 
 // use core::fmt::Debug;
@@ -44,14 +64,6 @@ async fn main() {
 //     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
 //         write!(f, "Series{{{}}}", self.len())
 //     }
-// }
-
-
-// let stdin = tokio::io::stdin();
-// let mut reader = tokio_util::codec::FramedRead::new(stdin, tokio_util::codec::LinesCodec::new());
-// loop {
-//     let line = reader.next().await;
-//     //let _ = tx.send(0).await;
 // }
 
 // use async_trait::async_trait;
