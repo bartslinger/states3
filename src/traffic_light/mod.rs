@@ -3,11 +3,11 @@ use tokio_stream::{StreamExt};
 mod context;
 mod events;
 mod states;
-mod runner;
 mod machine;
 mod red_state;
 mod green_state;
 mod yellow_state;
+mod generic_state;
 
 pub async fn run() {
     println!("Run function");
