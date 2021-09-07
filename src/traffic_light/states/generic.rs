@@ -1,6 +1,6 @@
-use super::states::State;
-use super::events::Event;
-use super::context::Context;
+use crate::traffic_light::machine::State;
+use crate::traffic_light::machine::Event;
+use crate::traffic_light::machine::Context;
 
 struct GenericState {
     on_done: State,
@@ -23,6 +23,22 @@ impl GenericState {
             println!("Printing stuff from the pinned future {}", arg);
             let square = arg * arg;
             square
+        })
+    }
+
+    fn get_abortable_future(mut abort_rx: tokio::sync::oneshot::Receiver<()>) -> std::pin::Pin<Box<dyn std::future::Future<Output = ()>>> {
+        Box::pin(async move {
+            loop {
+                println!("Just looping until I get aborted...");
+
+                let sleep = tokio::time::sleep(tokio::time::Duration::from_millis(500));
+                tokio::pin!(sleep);
+
+                tokio::select!{
+                    v = sleep => {},
+                    v = &mut abort_rx => { break }
+                };
+            }
         })
     }
 

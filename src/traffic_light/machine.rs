@@ -1,8 +1,24 @@
-use super::states::State;
-use super::events::Event;
-use super::context::Context;
+use super::states;
 
-use super::{red_state, green_state, yellow_state};
+#[derive(Default)]
+pub struct Context {
+    pub red: bool,
+    pub green: bool,
+    pub yellow: bool,
+}
+
+pub enum Event {
+    PressButton,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum State {
+    Red,
+    Green,
+    Yellow,
+    Error,
+    Done,
+}
 
 pub struct TrafficLightMachine {
 }
@@ -16,17 +32,17 @@ impl TrafficLightMachine {
         let mut state = State::Red;
 
 
-        let red_state = red_state::RedState{
+        let red_state = states::red::RedState{
             on_done: State::Green,
             on_error: State::Error,
         };
 
-        let green_state = green_state::GreenState {
+        let green_state = states::green::GreenState {
             on_done: State::Yellow,
             on_error: State::Error,
         };
 
-        let yellow_state = yellow_state::YellowState {
+        let yellow_state = states::yellow::YellowState {
             on_done: State::Red,
             on_error: State::Error,
         };

@@ -1,6 +1,6 @@
-use super::context::Context;
-use super::states::State;
-use super::events::Event;
+use crate::traffic_light::machine::Context;
+use crate::traffic_light::machine::State;
+use crate::traffic_light::machine::Event;
 
 pub struct RedState {
     pub on_done: State,
