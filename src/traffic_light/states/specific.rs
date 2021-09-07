@@ -16,11 +16,12 @@ pub struct SpecificState {
 
 impl SpecificState {
 
-    fn zelfde_misschien(x: tokio::sync::oneshot::Receiver<()>) -> InvokeFunction {
+    fn zelfde_misschien(context: &mut Context, rx: tokio::sync::oneshot::Receiver<()>) -> InvokeFunction {
+        println!("Invoking with context yellow: {}", context.yellow);
         Box::pin(async move {
             println!("Doing some sleep");
             tokio::time::sleep(tokio::time::Duration::from_millis(1000)).await;
-            println!("And this is the abort handle: {:?}", x);
+            println!("And this is the abort handle: {:?}", rx);
         })
     }
 

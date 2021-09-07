@@ -3,7 +3,7 @@ use crate::traffic_light::machine::Event;
 use crate::traffic_light::machine::Context;
 
 pub type InvokeFunction = std::pin::Pin<Box<dyn std::future::Future<Output = ()> + Send + Sync>>;
-pub type InvokeFunctionProvider = &'static (dyn Fn(tokio::sync::oneshot::Receiver<()>) -> InvokeFunction + Send + Sync);
+pub type InvokeFunctionProvider = &'static (dyn Fn(&mut Context, tokio::sync::oneshot::Receiver<()>) -> InvokeFunction + Send + Sync);
 
 pub struct GenericState {
     pub on_done: State,
@@ -59,10 +59,13 @@ impl GenericState {
         // Invoke some function, with an abort handle
         let (abort_tx, abort_rx) = tokio::sync::oneshot::channel::<()>();
 
-        let invokable = (self.invoke)(abort_rx);
+        let invokable = (self.invoke)(context, abort_rx);
+
 
         let join_handle = tokio::spawn(invokable);
         let _ = join_handle.await;
+
+        println!("And now context yellow is: {}", context.yellow);
 
 //         let join_handle = tokio::spawn(async move {
 //             // For now, just wait for the abort handle
