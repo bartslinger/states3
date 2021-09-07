@@ -2,12 +2,15 @@ use crate::traffic_light::machine::State;
 use crate::traffic_light::machine::Event;
 use crate::traffic_light::machine::Context;
 
-struct GenericState {
-    on_done: State,
+type InvokeFunction = std::pin::Pin<Box<dyn std::future::Future<Output = ()>>>;
+
+pub struct GenericState {
+    pub on_done: State,
+    pub invoke: InvokeFunction,
 }
 impl GenericState {
 
-    fn get_sleep_future() -> impl Fn(u32) -> std::pin::Pin<Box<dyn std::future::Future<Output = ()>>> {
+    fn get_sleep_future() -> impl Fn(u32) -> InvokeFunction {
         // let sleep_fut = tokio::time::sleep(tokio::time::Duration::from_millis(1000));
         // sleep_fut().then(|| {
 
@@ -18,15 +21,15 @@ impl GenericState {
         })
     }
 
-    fn get_pinned_future(arg: u32) -> std::pin::Pin<Box<dyn std::future::Future<Output = u32>>> {
+    pub fn get_pinned_future(arg: u32) -> InvokeFunction {
         Box::pin(async move {
             println!("Printing stuff from the pinned future {}", arg);
             let square = arg * arg;
-            square
+            ()
         })
     }
 
-    fn get_abortable_future(mut abort_rx: tokio::sync::oneshot::Receiver<()>) -> std::pin::Pin<Box<dyn std::future::Future<Output = ()>>> {
+    pub fn get_abortable_future(mut abort_rx: tokio::sync::oneshot::Receiver<()>) -> InvokeFunction {
         Box::pin(async move {
             loop {
                 println!("Just looping until I get aborted...");
@@ -42,16 +45,16 @@ impl GenericState {
         })
     }
 
-    pub fn new() -> Self {
-        Self {
+    pub fn new(invoke: InvokeFunction) -> Self {
+       Self {
             on_done: State::Done,
+            invoke: invoke,
         }
     }
 
     pub async fn run(&mut self, context: &mut Context, rx: &mut tokio::sync::mpsc::Receiver<Event>) -> State {
         let fut = GenericState::get_pinned_future(10);
         let res = fut.await;
-        println!("Squared = {}", res);
         // Run the entry
 
         // Invoke some function, with an abort handle

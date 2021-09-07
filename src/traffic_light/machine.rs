@@ -47,12 +47,18 @@ impl TrafficLightMachine {
             on_error: State::Error,
         };
 
+        let mut specific_state = states::specific::SpecificState::new(
+            states::specific::SpecificStateOptions {
+                on_done: State::Done,
+            }
+        );
+
         loop {
             let previous = state;
             state = match state {
                 State::Red => red_state.run(&mut context, &mut rx).await,
                 State::Green => green_state.run(&mut context, &mut rx).await,
-                State::Yellow => yellow_state.run(&mut context, &mut rx).await,
+                State::Yellow => specific_state.run(&mut context, &mut rx).await,
                 State::Error => State::Done,
                 State::Done => break,
             };
