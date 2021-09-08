@@ -2,8 +2,9 @@
 
 mod simple_test_machine;
 mod traffic_light;
+mod xstate;
 
 #[tokio::main]
 async fn main() {
-    traffic_light::run().await;
+    xstate::run().await;
 }
