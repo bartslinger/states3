@@ -7,4 +7,5 @@ mod xstate;
 #[tokio::main]
 async fn main() {
     xstate::run().await;
+    println!("Exit main");
 }
