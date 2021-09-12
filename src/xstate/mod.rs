@@ -67,6 +67,11 @@ impl IdType for Id {
         self
     }
 }
+impl Default for &dyn IdType {
+    fn default() -> Self {
+        &Id::Unknown
+    }
+}
 impl PartialEq for &dyn IdType {
     fn eq(&self, rhs: &&dyn IdType) -> bool {
         let lhs = self.as_any().downcast_ref::<Id>();

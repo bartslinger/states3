@@ -1,4 +1,4 @@
-use super::{Id, Context, Event, InvokeFunctionProvider, EventHandler, EventHandlerResponse, EventSender, EventReceiver};
+use super::{Context, Event, InvokeFunctionProvider, EventHandler, EventHandlerResponse, EventSender, EventReceiver};
 use super::machine::{MachineStructure};
 
 pub trait IdType {
@@ -89,6 +89,6 @@ impl XState {
             };
         }
 
-        Some(&Id::Done)
+        Some(<&dyn IdType>::default())
     }
 }
