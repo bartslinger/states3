@@ -1,21 +1,21 @@
-use super::{Id, Context, EventReceiver, EventSender};
-use super::xstate::{XState};
+use super::{Context, EventReceiver, EventSender};
+use super::xstate::{XState, IdType};
 
-pub type StatesMap<'a> = std::collections::HashMap<Id, &'a XState>;
-pub type ParentsMap = std::collections::HashMap<Id, Option<Id>>;
+pub type StatesMap<'a> = std::collections::HashMap<&'static dyn IdType, &'a XState>;
+pub type ParentsMap = std::collections::HashMap<&'static dyn IdType, Option<&'static dyn IdType>>;
 
 pub struct MachineStructure<'a> {
     pub map: StatesMap<'a>,
     pub parents: ParentsMap,
 }
 impl MachineStructure<'_> {
-    pub fn get_parent(&self, state_id: Id) -> Option<&XState> {
+    pub fn get_parent(&self, state_id: &dyn IdType) -> Option<&XState> {
         let parent_id = match self.parents.get(&state_id) {
             Some(Some(parent_id)) => parent_id,
             _ => return None,
         };
 
-        if let Some(&parent) = self.map.get(&parent_id) {
+        if let Some(&parent) = self.map.get(parent_id) {
             Some(parent)
         } else {
             None
@@ -59,7 +59,7 @@ impl Machine<'_> {
         self.event_sender.clone()
     }
 
-    fn map_states<'a>(states: &'a Vec<XState>, mut map: &mut StatesMap<'a>, mut parents_map: &mut ParentsMap, parent: Option<Id>) {
+    fn map_states<'a>(states: &'a Vec<XState>, mut map: &mut StatesMap<'a>, mut parents_map: &mut ParentsMap, parent: Option<&'static dyn IdType>) {
         states.into_iter().for_each(|x| {
             if let Some(_) = map.insert(x.id, &x) {
                 panic!("State with Id {:?} already exists, Id can only be used once", x.id);
@@ -70,7 +70,7 @@ impl Machine<'_> {
         });
     }
 
-    pub async fn run(&mut self, initial: Id) -> () {
+    pub async fn run(&mut self, initial: &'static dyn IdType) -> () {
         let mut current_id = initial;
         loop {
             let state = if let Some(&s) = self.structure.map.get(&current_id) {

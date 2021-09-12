@@ -5,7 +5,7 @@ pub mod red_state {
 
     pub fn new() -> XState {
         XState {
-            id: Id::TrafficLightRed,
+            id: &Id::TrafficLightRed,
             invoke: Some(&invoke),
             event_handler: &event_handler,
             states: vec![],

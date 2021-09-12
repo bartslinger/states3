@@ -1,8 +1,28 @@
 use super::{Id, Context, Event, InvokeFunctionProvider, EventHandler, EventHandlerResponse, EventSender, EventReceiver};
 use super::machine::{MachineStructure};
 
+pub trait IdType {
+    fn as_any(&self) -> &dyn std::any::Any;
+}
+impl std::fmt::Debug for &'static dyn IdType {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "IdType({:?})", self)
+    }
+}
+impl PartialEq for &dyn IdType {
+    fn eq(&self, rhs: &&dyn IdType) -> bool {
+        *self == *rhs
+    }
+}
+impl Eq for &dyn IdType {}
+impl std::hash::Hash for &dyn IdType {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        (*self).hash(state)
+    }
+}
+
 pub struct XState {
-    pub id: Id,
+    pub id: &'static dyn IdType,
     pub invoke: Option<InvokeFunctionProvider>,
     pub event_handler: EventHandler,
     pub states: Vec<XState>,
@@ -36,7 +56,7 @@ impl XState {
         }
     }
 
-    pub async fn run(&self, mut context: &mut Context, event_listener: &mut EventReceiver, machine_structure: &MachineStructure<'_>) -> Option<Id> {
+    pub async fn run(&self, mut context: &mut Context, event_listener: &mut EventReceiver, machine_structure: &MachineStructure<'_>) -> Option<&'static dyn IdType> {
 
         if let Some(invoke) = self.invoke {
             let (mut task_event_tx, task_event_rx) = tokio::sync::mpsc::channel::<Event>(100);
@@ -85,6 +105,6 @@ impl XState {
             };
         }
 
-        Some(Id::Done)
+        Some(&Id::Done)
     }
 }

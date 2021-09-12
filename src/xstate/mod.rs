@@ -4,7 +4,7 @@ mod traffic_light;
 mod machine;
 mod xstate;
 
-use xstate::{XState};
+use xstate::{XState, IdType};
 use machine::{Machine};
 
 pub type TaskResult = Result<TaskOutput, TaskError>;
@@ -32,7 +32,7 @@ pub enum Event {
 pub enum EventHandlerResponse {
     Unhandled,
     DoNothing,    
-    TryTransition(Id),
+    TryTransition(&'static dyn IdType),
 }
 
 #[derive(Debug)]
@@ -62,21 +62,41 @@ pub enum Id {
 impl Default for Id {
     fn default() -> Self { Id::Unknown }
 }
+impl IdType for Id {
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
+}
 
 fn empty_event_handler(context: &mut Context, event: &Event, task_event_sender: &Option<&mut EventSender>) -> EventHandlerResponse {
     println!("Empty event handler called");
     EventHandlerResponse::Unhandled
 }
 
+fn needs_idtype(id: impl IdType + std::fmt::Debug) {
+    if let Some(test) = id.as_any().downcast_ref::<Id>() {
+        println!("{:?}", test);
+    }
+}
+
 pub async fn run() {
+
+    // test
+    println!("Start");
+
+
+    needs_idtype(Id::Root);
+
+    return;
+
     let machine_states = vec![
         XState {
-            id: Id::Root,
+            id: &Id::Root,
             invoke: None,
             event_handler: &empty_event_handler,
             states: vec![
                 XState {
-                    id: Id::Initializing,
+                    id: &Id::Initializing,
                     invoke: None,
                     event_handler: &empty_event_handler,
                     states: vec![],
@@ -115,5 +135,5 @@ pub async fn run() {
         println!("Event sender dropped");
     });
 
-    machine.run(Id::TrafficLightRed).await;
+    machine.run(&Id::TrafficLightRed).await;
 }
