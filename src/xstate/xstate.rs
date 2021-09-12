@@ -13,6 +13,9 @@ impl std::fmt::Debug for XState {
     }
 }
 impl XState {
+    fn dummy_event_handler(context: &mut Context, event: &Event, task_event_sender: &mut EventSender) -> EventHandlerResponse {
+        EventHandlerResponse::Unhandled
+    }
 
     fn handle_event(&self, mut context: &mut Context, event: Event, mut task_event_tx: &mut EventSender, machine_structure: &MachineStructure) -> EventHandlerResponse {
         println!("Hanlding event {:?}", event);

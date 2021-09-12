@@ -64,11 +64,12 @@ impl Default for Id {
 }
 
 fn empty_event_handler(context: &mut Context, event: &Event, task_event_sender: &mut EventSender) -> EventHandlerResponse {
-    EventHandlerResponse::DoNothing
+    println!("Empty event handler called");
+    EventHandlerResponse::Unhandled
 }
 
 pub async fn run() {
-    let machine_structure = vec![
+    let machine_states = vec![
         XState {
             id: Id::Root,
             invoke: None,
@@ -88,7 +89,7 @@ pub async fn run() {
     let context = Context {
         button_press_counter: 0,
     };
-    let mut machine = Machine::new(context, &machine_structure);
+    let mut machine = Machine::new(context, &machine_states);
 
     // Get an event tx handle
     let event_sender = machine.get_event_send_handle();

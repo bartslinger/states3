@@ -61,7 +61,9 @@ impl Machine<'_> {
 
     fn map_states<'a>(states: &'a Vec<XState>, mut map: &mut StatesMap<'a>, mut parents_map: &mut ParentsMap, parent: Option<Id>) {
         states.into_iter().for_each(|x| {
-            map.insert(x.id, &x);
+            if let Some(_) = map.insert(x.id, &x) {
+                panic!("State with Id {:?} already exists, Id can only be used once", x.id);
+            }
             parents_map.insert(x.id, parent);
             // Also map substates
             Self::map_states(&x.states, &mut map, &mut parents_map, Some(x.id));
