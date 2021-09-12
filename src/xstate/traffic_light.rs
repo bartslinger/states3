@@ -1,4 +1,4 @@
-use super::{XState, Id, Context, Event, InvokeFunction, EventHandlerResponse, AbortReceiver};
+use super::{XState, Id, Context, Event, InvokeFunction, EventHandlerResponse, EventReceiver, EventSender, TaskOutput};
 
 pub mod red_state {
     use super::*;
@@ -12,15 +12,20 @@ pub mod red_state {
         }
     }
 
-    fn invoke(context: &mut Context, mut abort: AbortReceiver) -> InvokeFunction {
+    fn invoke(context: &mut Context, mut events: EventReceiver) -> InvokeFunction {
         Box::pin(async move {
+            let mut cnt = 0;
             loop {
-                println!("Still red...");
+                cnt += 1;
+                if cnt == 5 {
+                    break
+                }
+                println!("Still red... ({})", cnt);
                 let sleep = tokio::time::sleep(tokio::time::Duration::from_millis(2000));
                 tokio::pin!(sleep);
                 tokio::select! {
                     v = sleep => {},
-                    v = &mut abort => { 
+                    v = events.recv() => { 
                         // Simulate need for some time to cleanup
                         println!("Aborting");
                         tokio::time::sleep(tokio::time::Duration::from_millis(2000)).await;
@@ -29,15 +34,22 @@ pub mod red_state {
                 }
             }
             println!("Aborted");
+            Ok(TaskOutput::Ok)
         })
     }
 
-    fn event_handler(context: &mut Context, event: &Event) -> EventHandlerResponse {
+    fn event_handler(context: &mut Context, event: &Event, task_event_sender: &mut EventSender) -> EventHandlerResponse {
         // Increment the counter. If counter reaches 5, abort the invoked function
+        match event {
+            Event::Abort => {
+                let _ = task_event_sender.try_send(Event::Abort);
+            },
+            _ => {},
+        }
         context.button_press_counter += 1;
         if context.button_press_counter == 5 {
             println!("Reached 5, aborting!!");
-            return EventHandlerResponse::AbortInvokedFunction
+            let _ = task_event_sender.try_send(Event::Abort);
         }
         EventHandlerResponse::DoNothing
     }
