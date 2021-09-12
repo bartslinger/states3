@@ -29,7 +29,7 @@ pub mod red_state {
                         // Simulate need for some time to cleanup
                         println!("Aborting");
                         tokio::time::sleep(tokio::time::Duration::from_millis(2000)).await;
-                        break
+                        return Ok(TaskOutput::Aborted)
                     },
                 }
             }
@@ -43,14 +43,19 @@ pub mod red_state {
         match event {
             Event::Abort => {
                 let _ = task_event_sender.try_send(Event::Abort);
+                EventHandlerResponse::DoNothing
             },
-            _ => {},
+            Event::PushButton => {
+                context.button_press_counter += 1;
+                if context.button_press_counter == 5 {
+                    println!("Reached 5, aborting!!");
+                    let _ = task_event_sender.try_send(Event::Abort);
+                }
+                EventHandlerResponse::DoNothing
+            },
+            _ => {
+                EventHandlerResponse::Unhandled
+            },
         }
-        context.button_press_counter += 1;
-        if context.button_press_counter == 5 {
-            println!("Reached 5, aborting!!");
-            let _ = task_event_sender.try_send(Event::Abort);
-        }
-        EventHandlerResponse::DoNothing
     }
 }

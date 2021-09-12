@@ -24,20 +24,21 @@ pub struct Context {
 pub enum Event {
     PushButton,
     Abort,
-    Abort,
     TaskDone(TaskOutput),
     TaskError(TaskError),
 }
 
 #[derive(Debug)]
 pub enum EventHandlerResponse {
+    Unhandled,
     DoNothing,    
     TryTransition(Id),
 }
 
 #[derive(Debug)]
 pub enum TaskOutput {
-    Ok
+    Ok,
+    Aborted,
 }
 
 #[derive(Debug)]
