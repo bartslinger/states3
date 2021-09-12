@@ -13,7 +13,7 @@ pub type InvokeFunctionProvider = &'static (dyn Fn(&mut Context, EventReceiver) 
 
 pub type EventSender = tokio::sync::mpsc::Sender<Event>;
 pub type EventReceiver = tokio::sync::mpsc::Receiver<Event>;
-pub type EventHandler = &'static (dyn Fn(&mut Context, &Event, &mut EventSender) -> EventHandlerResponse);
+pub type EventHandler = &'static (dyn Fn(&mut Context, &Event, &Option<&mut EventSender>) -> EventHandlerResponse);
 
 #[derive(Debug)]
 pub struct Context {
@@ -63,7 +63,7 @@ impl Default for Id {
     fn default() -> Self { Id::Unknown }
 }
 
-fn empty_event_handler(context: &mut Context, event: &Event, task_event_sender: &mut EventSender) -> EventHandlerResponse {
+fn empty_event_handler(context: &mut Context, event: &Event, task_event_sender: &Option<&mut EventSender>) -> EventHandlerResponse {
     println!("Empty event handler called");
     EventHandlerResponse::Unhandled
 }

@@ -38,18 +38,22 @@ pub mod red_state {
         })
     }
 
-    fn event_handler(context: &mut Context, event: &Event, task_event_sender: &mut EventSender) -> EventHandlerResponse {
+    fn event_handler(context: &mut Context, event: &Event, task_event_sender: &Option<&mut EventSender>) -> EventHandlerResponse {
         // Increment the counter. If counter reaches 5, abort the invoked function
         match event {
             Event::Abort => {
-                let _ = task_event_sender.try_send(Event::Abort);
+                if let Some(task_event_sender) = task_event_sender {
+                    let _ = task_event_sender.try_send(Event::Abort);
+                }
                 EventHandlerResponse::DoNothing
             },
             Event::PushButton => {
                 context.button_press_counter += 1;
                 if context.button_press_counter == 5 {
                     println!("Reached 5, aborting!!");
-                    let _ = task_event_sender.try_send(Event::Abort);
+                    if let Some(task_event_sender) = task_event_sender {
+                        let _ = task_event_sender.try_send(Event::Abort);
+                    }
                     EventHandlerResponse::DoNothing
                 } else {
                     EventHandlerResponse::Unhandled
