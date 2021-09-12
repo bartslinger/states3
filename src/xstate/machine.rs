@@ -35,7 +35,6 @@ impl Machine<'_> {
         let mut map = std::collections::HashMap::new();
         let mut parents_map = std::collections::HashMap::new();
         Self::map_states(&states, &mut map, &mut parents_map, None);
-        println!("{:?}", parents_map);
 
         let structure = MachineStructure {
             map: map,
@@ -51,7 +50,6 @@ impl Machine<'_> {
             event_receiver: rx,
         };
 
-        println!("{:?}", machine.states);
         machine
     }
 

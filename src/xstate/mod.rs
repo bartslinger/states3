@@ -67,6 +67,32 @@ impl IdType for Id {
         self
     }
 }
+impl PartialEq for &dyn IdType {
+    fn eq(&self, rhs: &&dyn IdType) -> bool {
+        let lhs = self.as_any().downcast_ref::<Id>();
+        let rhs = rhs.as_any().downcast_ref::<Id>();
+        match (lhs, rhs) {
+            (Some(lhs), Some(rhs)) => lhs == rhs,
+            _ => false
+        }
+    }
+}
+impl Eq for &dyn IdType {}
+impl std::hash::Hash for &dyn IdType {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        let lhs = self.as_any().downcast_ref::<Id>();
+        lhs.hash(state)
+    }
+}
+impl std::fmt::Debug for &'static dyn IdType {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self.as_any().downcast_ref::<Id>() {
+            Some(id) => write!(f, "{:?}", id),
+            None => write!(f, "IdType()"),
+        }
+    }
+}
+
 
 fn empty_event_handler(context: &mut Context, event: &Event, task_event_sender: &Option<&mut EventSender>) -> EventHandlerResponse {
     println!("Empty event handler called");
@@ -87,7 +113,6 @@ pub async fn run() {
 
     needs_idtype(Id::Root);
 
-    return;
 
     let machine_states = vec![
         XState {

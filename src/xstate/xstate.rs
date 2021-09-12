@@ -4,22 +4,6 @@ use super::machine::{MachineStructure};
 pub trait IdType {
     fn as_any(&self) -> &dyn std::any::Any;
 }
-impl std::fmt::Debug for &'static dyn IdType {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "IdType({:?})", self)
-    }
-}
-impl PartialEq for &dyn IdType {
-    fn eq(&self, rhs: &&dyn IdType) -> bool {
-        *self == *rhs
-    }
-}
-impl Eq for &dyn IdType {}
-impl std::hash::Hash for &dyn IdType {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        (*self).hash(state)
-    }
-}
 
 pub struct XState {
     pub id: &'static dyn IdType,
