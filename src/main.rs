@@ -3,9 +3,10 @@
 mod simple_test_machine;
 mod traffic_light;
 mod xstate;
+mod xstate_user;
 
 #[tokio::main]
 async fn main() {
-    xstate::run().await;
+    xstate_user::run().await;
     println!("Exit main");
 }

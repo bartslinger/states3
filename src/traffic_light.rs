@@ -1,9 +1,11 @@
-use super::{XState, Id, Context, Event, InvokeFunction, EventHandlerResponse, EventReceiver, EventSender, TaskOutput};
+use crate::xstate::xstate::XState;
+use crate::xstate::{InvokeFunction, EventReceiver, EventSender, TaskOutput};
+use crate::xstate_user::{Id, Context, Event, EventHandlerResponse};
 
 pub mod red_state {
     use super::*;
 
-    pub fn new() -> XState<Id> {
+    pub fn new() -> XState<Id, Event> {
         XState {
             id: Id::TrafficLightRed,
             invoke: Some(&invoke),
@@ -12,7 +14,7 @@ pub mod red_state {
         }
     }
 
-    fn invoke(context: &mut Context, mut events: EventReceiver) -> InvokeFunction {
+    fn invoke(context: &mut Context, mut events: EventReceiver<Event>) -> InvokeFunction {
         Box::pin(async move {
             let mut cnt = 0;
             loop {
@@ -38,7 +40,7 @@ pub mod red_state {
         })
     }
 
-    fn event_handler(context: &mut Context, event: &Event, task_event_sender: &Option<&mut EventSender>) -> EventHandlerResponse<Id> {
+    fn event_handler(context: &mut Context, event: &Event, task_event_sender: &Option<&mut EventSender<Event>>) -> EventHandlerResponse<Id> {
         // Increment the counter. If counter reaches 5, abort the invoked function
         match event {
             Event::Abort => {
