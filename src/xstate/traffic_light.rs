@@ -3,9 +3,9 @@ use super::{XState, Id, Context, Event, InvokeFunction, EventHandlerResponse, Ev
 pub mod red_state {
     use super::*;
 
-    pub fn new() -> XState {
+    pub fn new() -> XState<Id> {
         XState {
-            id: &Id::TrafficLightRed,
+            id: Id::TrafficLightRed,
             invoke: Some(&invoke),
             event_handler: &event_handler,
             states: vec![],
@@ -38,7 +38,7 @@ pub mod red_state {
         })
     }
 
-    fn event_handler(context: &mut Context, event: &Event, task_event_sender: &Option<&mut EventSender>) -> EventHandlerResponse {
+    fn event_handler(context: &mut Context, event: &Event, task_event_sender: &Option<&mut EventSender>) -> EventHandlerResponse<Id> {
         // Increment the counter. If counter reaches 5, abort the invoked function
         match event {
             Event::Abort => {

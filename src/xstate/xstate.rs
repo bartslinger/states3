@@ -5,23 +5,23 @@ pub trait IdType {
     fn as_any(&self) -> &dyn std::any::Any;
 }
 
-pub struct XState {
-    pub id: &'static dyn IdType,
+pub struct XState<Id: 'static + IdType> {
+    pub id: Id,
     pub invoke: Option<InvokeFunctionProvider>,
-    pub event_handler: EventHandler,
-    pub states: Vec<XState>,
+    pub event_handler: EventHandler<Id>,
+    pub states: Vec<XState<Id>>,
 }
-impl std::fmt::Debug for XState {
+impl<Id: IdType + std::fmt::Debug> std::fmt::Debug for XState<Id> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "XState({:?})", self.id)
     }
 }
-impl XState {
-    fn dummy_event_handler(context: &mut Context, event: &Event, task_event_sender: &mut EventSender) -> EventHandlerResponse {
+impl<Id: IdType + std::fmt::Debug + std::default::Default + std::cmp::Eq + std::hash::Hash + Copy> XState<Id> {
+    fn dummy_event_handler(context: &mut Context, event: &Event, task_event_sender: &mut EventSender) -> EventHandlerResponse<Id> {
         EventHandlerResponse::Unhandled
     }
 
-    fn handle_event(&self, mut context: &mut Context, event: Event, task_event_tx: &Option<&mut EventSender>, machine_structure: &MachineStructure) -> EventHandlerResponse {
+    fn handle_event(&self, mut context: &mut Context, event: Event, task_event_tx: &Option<&mut EventSender>, machine_structure: &MachineStructure<Id>) -> EventHandlerResponse<Id> {
         println!("Hanlding event {:?}", event);
         let event_result = (self.event_handler)(&mut context, &event, task_event_tx);
         match event_result {
@@ -40,7 +40,7 @@ impl XState {
         }
     }
 
-    pub async fn run(&self, mut context: &mut Context, event_listener: &mut EventReceiver, machine_structure: &MachineStructure<'_>) -> Option<&'static dyn IdType> {
+    pub async fn run(&self, mut context: &mut Context, event_listener: &mut EventReceiver, machine_structure: &MachineStructure<'_, Id>) -> Option<Id> {
 
         if let Some(invoke) = self.invoke {
             let (mut task_event_tx, task_event_rx) = tokio::sync::mpsc::channel::<Event>(100);
@@ -89,6 +89,6 @@ impl XState {
             };
         }
 
-        Some(<&dyn IdType>::default())
+        Some(Id::default())
     }
 }

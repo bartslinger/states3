@@ -13,7 +13,7 @@ pub type InvokeFunctionProvider = &'static (dyn Fn(&mut Context, EventReceiver) 
 
 pub type EventSender = tokio::sync::mpsc::Sender<Event>;
 pub type EventReceiver = tokio::sync::mpsc::Receiver<Event>;
-pub type EventHandler = &'static (dyn Fn(&mut Context, &Event, &Option<&mut EventSender>) -> EventHandlerResponse);
+pub type EventHandler<Id> = &'static (dyn Fn(&mut Context, &Event, &Option<&mut EventSender>) -> EventHandlerResponse<Id>);
 
 #[derive(Debug)]
 pub struct Context {
@@ -29,10 +29,10 @@ pub enum Event {
 }
 
 #[derive(Debug)]
-pub enum EventHandlerResponse {
+pub enum EventHandlerResponse<Id: IdType> {
     Unhandled,
     DoNothing,    
-    TryTransition(&'static dyn IdType),
+    TryTransition(Id),
 }
 
 #[derive(Debug)]
@@ -99,12 +99,12 @@ impl std::fmt::Debug for &'static dyn IdType {
 }
 
 
-fn empty_event_handler(context: &mut Context, event: &Event, task_event_sender: &Option<&mut EventSender>) -> EventHandlerResponse {
+fn empty_event_handler(context: &mut Context, event: &Event, task_event_sender: &Option<&mut EventSender>) -> EventHandlerResponse<Id> {
     println!("Empty event handler called");
     EventHandlerResponse::Unhandled
 }
 
-fn needs_idtype(id: impl IdType + std::fmt::Debug) {
+fn needs_idtype(id: impl IdType) {
     if let Some(test) = id.as_any().downcast_ref::<Id>() {
         println!("{:?}", test);
     }
@@ -121,12 +121,12 @@ pub async fn run() {
 
     let machine_states = vec![
         XState {
-            id: &Id::Root,
+            id: Id::Root,
             invoke: None,
             event_handler: &empty_event_handler,
             states: vec![
                 XState {
-                    id: &Id::Initializing,
+                    id: Id::Initializing,
                     invoke: None,
                     event_handler: &empty_event_handler,
                     states: vec![],
@@ -165,5 +165,5 @@ pub async fn run() {
         println!("Event sender dropped");
     });
 
-    machine.run(&Id::TrafficLightRed).await;
+    machine.run(Id::TrafficLightRed).await;
 }
