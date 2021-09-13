@@ -5,7 +5,7 @@ use crate::xstate_user::{Id, Context, Event};
 pub mod red_state {
     use super::*;
 
-    pub fn new<'a>() -> XState<Id, Context, Event> {
+    pub fn new<'i, 'h>() -> XState<'i, 'h, Id, Context, Event> {
         XState {
             id: Id::TrafficLightRed,
             invoke: Some(&invoke),

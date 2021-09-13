@@ -2,18 +2,18 @@ use super::{IdType, ContextType, EventType};
 
 use super::{InvokeFunctionProvider, EventHandler, EventSender, EventReceiver, EventHandlerResponse};
 use super::machine::{MachineStructure};
-pub struct XState<Id: IdType, Context: ContextType, Event: EventType> {
+pub struct XState<'i, 'h, Id: IdType, Context: ContextType, Event: EventType> {
     pub id: Id,
-    pub invoke: Option<InvokeFunctionProvider<Context, Event>>,
-    pub event_handler: EventHandler<Id, Context, Event>,
-    pub states: Vec<XState<Id, Context, Event>>,
+    pub invoke: Option<InvokeFunctionProvider<'i, Context, Event>>,
+    pub event_handler: EventHandler<'h, Id, Context, Event>,
+    pub states: Vec<XState<'i, 'h, Id, Context, Event>>,
 }
-impl<Id: IdType, Context: ContextType, Event: EventType> std::fmt::Debug for XState<Id, Context, Event> {
+impl<Id: IdType, Context: ContextType, Event: EventType> std::fmt::Debug for XState<'_, '_, Id, Context, Event> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "XState({:?})", self.id)
     }
 }
-impl<Id: IdType, Context: ContextType, Event: EventType> XState<Id, Context, Event> {
+impl<Id: IdType, Context: ContextType, Event: EventType> XState<'_, '_, Id, Context, Event> {
     fn dummy_event_handler(context: &mut Context, event: &Event, task_event_sender: &mut EventSender<Event>) -> EventHandlerResponse<Id> {
         EventHandlerResponse::Unhandled
     }
@@ -37,7 +37,7 @@ impl<Id: IdType, Context: ContextType, Event: EventType> XState<Id, Context, Eve
         }
     }
 
-    pub async fn run(&self, mut context: &mut Context, event_listener: &mut EventReceiver<Event>, machine_structure: &MachineStructure<'_, Id, Context, Event>) -> Option<Id> {
+    pub async fn run(&self, mut context: &mut Context, event_listener: &mut EventReceiver<Event>, machine_structure: &MachineStructure<'_, '_, '_, Id, Context, Event>) -> Option<Id> {
 
         if let Some(invoke) = self.invoke {
             let (mut task_event_tx, task_event_rx) = tokio::sync::mpsc::channel::<Event>(100);
