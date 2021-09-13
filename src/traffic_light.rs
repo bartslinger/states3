@@ -1,11 +1,11 @@
 use crate::xstate::xstate::XState;
-use crate::xstate::{InvokeFunction, EventReceiver, EventSender, TaskOutput};
-use crate::xstate_user::{Id, Context, Event, EventHandlerResponse};
+use crate::xstate::{InvokeFunction, EventReceiver, EventSender, TaskOutput, EventHandlerResponse};
+use crate::xstate_user::{Id, Context, Event};
 
 pub mod red_state {
     use super::*;
 
-    pub fn new() -> XState<Id, Event> {
+    pub fn new<'a>() -> XState<Id, Context, Event> {
         XState {
             id: Id::TrafficLightRed,
             invoke: Some(&invoke),

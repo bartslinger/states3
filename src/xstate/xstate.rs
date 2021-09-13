@@ -1,32 +1,24 @@
-// TODO: Remove
-use crate::xstate_user::EventHandlerResponse;
+use super::{IdType, ContextType, EventType};
 
-use super::{super::xstate_user::Context, InvokeFunctionProvider, EventHandler, EventSender, EventReceiver, TaskError, TaskOutput};
+use super::{InvokeFunctionProvider, EventHandler, EventSender, EventReceiver, EventHandlerResponse};
 use super::machine::{MachineStructure};
-
-pub trait IdType: 'static + std::fmt::Debug + std::default::Default + std::cmp::Eq + std::hash::Hash + Copy {}
-pub trait EventType: 'static + std::fmt::Debug {
-    fn task_done(res: TaskOutput) -> Self;
-    fn task_error(res: TaskError) -> Self;
-}
-
-pub struct XState<Id: IdType, Event: EventType> {
+pub struct XState<Id: IdType, Context: ContextType, Event: EventType> {
     pub id: Id,
-    pub invoke: Option<InvokeFunctionProvider<Event>>,
-    pub event_handler: EventHandler<Id, Event>,
-    pub states: Vec<XState<Id, Event>>,
+    pub invoke: Option<InvokeFunctionProvider<Context, Event>>,
+    pub event_handler: EventHandler<Id, Context, Event>,
+    pub states: Vec<XState<Id, Context, Event>>,
 }
-impl<Id: IdType, Event: EventType> std::fmt::Debug for XState<Id, Event> {
+impl<Id: IdType, Context: ContextType, Event: EventType> std::fmt::Debug for XState<Id, Context, Event> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "XState({:?})", self.id)
     }
 }
-impl<Id: IdType, Event: EventType> XState<Id, Event> {
+impl<Id: IdType, Context: ContextType, Event: EventType> XState<Id, Context, Event> {
     fn dummy_event_handler(context: &mut Context, event: &Event, task_event_sender: &mut EventSender<Event>) -> EventHandlerResponse<Id> {
         EventHandlerResponse::Unhandled
     }
 
-    fn handle_event(&self, mut context: &mut Context, event: Event, task_event_tx: &Option<&mut EventSender<Event>>, machine_structure: &MachineStructure<Id, Event>) -> EventHandlerResponse<Id> {
+    fn handle_event(&self, mut context: &mut Context, event: Event, task_event_tx: &Option<&mut EventSender<Event>>, machine_structure: &MachineStructure<Id, Context, Event>) -> EventHandlerResponse<Id> {
         println!("Handling event {:?}", event);
         let event_result = (self.event_handler)(&mut context, &event, task_event_tx);
         match event_result {
@@ -45,7 +37,7 @@ impl<Id: IdType, Event: EventType> XState<Id, Event> {
         }
     }
 
-    pub async fn run(&self, mut context: &mut Context, event_listener: &mut EventReceiver<Event>, machine_structure: &MachineStructure<'_, Id, Event>) -> Option<Id> {
+    pub async fn run(&self, mut context: &mut Context, event_listener: &mut EventReceiver<Event>, machine_structure: &MachineStructure<'_, Id, Context, Event>) -> Option<Id> {
 
         if let Some(invoke) = self.invoke {
             let (mut task_event_tx, task_event_rx) = tokio::sync::mpsc::channel::<Event>(100);

@@ -1,15 +1,16 @@
-use super::{super::xstate_user::Context, EventReceiver, EventSender};
-use super::xstate::{XState, IdType, EventType};
+use super::{EventReceiver, EventSender};
+use super::xstate::{XState};
+use super::{IdType, ContextType, EventType};
 
-pub type StatesMap<'a, Id, Event> = std::collections::HashMap<Id, &'a XState<Id, Event>>;
+pub type StatesMap<'s, Id, Context, Event> = std::collections::HashMap<Id, &'s XState<Id, Context, Event>>;
 pub type ParentsMap<Id> = std::collections::HashMap<Id, Option<Id>>;
 
-pub struct MachineStructure<'a, Id: 'static + IdType, Event: EventType> {
-    pub map: StatesMap<'a, Id, Event>,
+pub struct MachineStructure<'s, Id: IdType, Context: ContextType, Event: EventType> {
+    pub map: StatesMap<'s, Id, Context, Event>,
     pub parents: ParentsMap<Id>,
 }
-impl<Id: IdType, Event: EventType> MachineStructure<'_, Id, Event> {
-    pub fn get_parent(&self, state_id: Id) -> Option<&XState<Id, Event>> {
+impl<'a, Id: IdType, Context: ContextType, Event: EventType> MachineStructure<'a, Id, Context, Event> {
+    pub fn get_parent(&self, state_id: Id) -> Option<&'a XState<Id, Context, Event>> {
         let parent_id = match self.parents.get(&state_id) {
             Some(Some(parent_id)) => parent_id,
             _ => return None,
@@ -23,15 +24,15 @@ impl<Id: IdType, Event: EventType> MachineStructure<'_, Id, Event> {
     }
 }
 
-pub struct Machine<'a, Id: 'static + IdType, Event: EventType> {
+pub struct Machine<'s, Id: IdType, Context: ContextType, Event: EventType> {
     context: Context,
-    states: &'a Vec<XState<Id, Event>>,
-    structure: MachineStructure<'a, Id, Event>,
+    states: &'s Vec<XState<Id, Context, Event>>,
+    structure: MachineStructure<'s, Id, Context, Event>,
     event_sender: EventSender<Event>,
     event_receiver: EventReceiver<Event>,
 }
-impl<Id: IdType, Event: EventType> Machine<'_, Id, Event> {
-    pub fn new(context: Context, states: &Vec<XState<Id, Event>>) -> Machine<Id, Event> {
+impl<Id: IdType, Context: ContextType, Event: EventType> Machine<'_, Id, Context, Event> {
+    pub fn new<'s>(context: Context, states: &'s Vec<XState<Id, Context, Event>>) -> Machine<'s, Id, Context, Event> {
         let mut map = std::collections::HashMap::new();
         let mut parents_map = std::collections::HashMap::new();
         Self::map_states(&states, &mut map, &mut parents_map, None);
@@ -57,7 +58,7 @@ impl<Id: IdType, Event: EventType> Machine<'_, Id, Event> {
         self.event_sender.clone()
     }
 
-    fn map_states<'a>(states: &'a Vec<XState<Id, Event>>, mut map: &mut StatesMap<'a, Id, Event>, mut parents_map: &mut ParentsMap<Id>, parent: Option<Id>) {
+    fn map_states<'s>(states: &'s Vec<XState<Id, Context, Event>>, mut map: &mut StatesMap<'s, Id, Context, Event>, mut parents_map: &mut ParentsMap<Id>, parent: Option<Id>) {
         states.into_iter().for_each(|x| {
             if let Some(_) = map.insert(x.id, &x) {
                 panic!("State with Id {:?} already exists, Id can only be used once", x.id);

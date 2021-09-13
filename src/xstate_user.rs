@@ -1,8 +1,9 @@
 use tokio_stream::{StreamExt};
 
-use crate::xstate::xstate::{XState, IdType, EventType};
-use crate::xstate::{EventSender, TaskOutput, TaskError};
+use crate::xstate::xstate::{XState};
+use crate::xstate::{EventSender, TaskOutput, TaskError, EventHandlerResponse};
 use crate::xstate::machine::{Machine};
+use crate::xstate;
 
 use crate::traffic_light;
 
@@ -10,6 +11,7 @@ use crate::traffic_light;
 pub struct Context {
     pub button_press_counter: u32,
 }
+impl xstate::ContextType for Context {}
 
 #[derive(Debug)]
 pub enum Event {
@@ -18,7 +20,7 @@ pub enum Event {
     TaskDone(TaskOutput),
     TaskError(TaskError),
 }
-impl EventType for Event {
+impl xstate::EventType for Event {
 
     fn task_done(res: TaskOutput) -> Self {
         Event::TaskDone(res)
@@ -27,13 +29,6 @@ impl EventType for Event {
     fn task_error(err: TaskError) -> Self {
         Event::TaskError(err)
     }
-}
-
-#[derive(Debug)]
-pub enum EventHandlerResponse<Id: IdType> {
-    Unhandled,
-    DoNothing,    
-    TryTransition(Id),
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
@@ -49,7 +44,7 @@ pub enum Id {
     Error,
     Unknown,
 }
-impl IdType for Id {}
+impl xstate::IdType for Id {}
 impl Default for Id {
     fn default() -> Self { Id::Unknown }
 }
