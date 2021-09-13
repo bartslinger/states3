@@ -1,4 +1,4 @@
-use super::{EventReceiver, EventSender};
+use super::{EventReceiver};
 use super::xstate::{XState};
 use super::{IdType, ContextType, EventType};
 
@@ -28,11 +28,10 @@ pub struct Machine<'s, 'i, 'h, Id: IdType, Context: ContextType, Event: EventTyp
     context: Context,
     states: &'s Vec<XState<'i, 'h, Id, Context, Event>>,
     structure: MachineStructure<'s, 'i, 'h, Id, Context, Event>,
-    event_sender: EventSender<Event>,
     event_receiver: EventReceiver<Event>,
 }
 impl<'s, 'i, 'h, Id: IdType, Context: ContextType, Event: EventType> Machine<'s, 'i, 'h, Id, Context, Event> {
-    pub fn new(context: Context, states: &'s Vec<XState<'i, 'h, Id, Context, Event>>) -> Machine<'s, 'i, 'h, Id, Context, Event> {
+    pub fn new(context: Context, event_receiver: EventReceiver<Event>, states: &'s Vec<XState<'i, 'h, Id, Context, Event>>) -> Machine<'s, 'i, 'h, Id, Context, Event> {
         let mut map = std::collections::HashMap::new();
         let mut parents_map = std::collections::HashMap::new();
         Self::map_states(&states, &mut map, &mut parents_map, None);
@@ -42,20 +41,14 @@ impl<'s, 'i, 'h, Id: IdType, Context: ContextType, Event: EventType> Machine<'s,
             parents: parents_map,
         };
 
-        let (tx, rx) = tokio::sync::mpsc::channel(10);
         let machine = Machine {
             context: context,
             states: states,
             structure: structure,
-            event_sender: tx,
-            event_receiver: rx,
+            event_receiver: event_receiver,
         };
 
         machine
-    }
-
-    pub fn get_event_send_handle(&self) -> EventSender<Event> {
-        self.event_sender.clone()
     }
 
     fn map_states(states: &'s Vec<XState<'i, 'h, Id, Context, Event>>, mut map: &mut StatesMap<'s, 'i, 'h, Id, Context, Event>, mut parents_map: &mut ParentsMap<Id>, parent: Option<Id>) {

@@ -3,6 +3,7 @@
 mod machine;
 mod types;
 mod states;
+mod keyboard_events;
 
 #[tokio::main]
 async fn main() {
