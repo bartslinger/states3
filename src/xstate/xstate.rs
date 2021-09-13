@@ -1,22 +1,20 @@
 use super::{Context, Event, InvokeFunctionProvider, EventHandler, EventHandlerResponse, EventSender, EventReceiver};
 use super::machine::{MachineStructure};
 
-pub trait IdType {
-    fn as_any(&self) -> &dyn std::any::Any;
-}
+pub trait IdType: 'static + std::fmt::Debug + std::default::Default + std::cmp::Eq + std::hash::Hash + Copy {}
 
-pub struct XState<Id: 'static + IdType> {
+pub struct XState<Id: IdType> {
     pub id: Id,
     pub invoke: Option<InvokeFunctionProvider>,
     pub event_handler: EventHandler<Id>,
     pub states: Vec<XState<Id>>,
 }
-impl<Id: IdType + std::fmt::Debug> std::fmt::Debug for XState<Id> {
+impl<Id: IdType> std::fmt::Debug for XState<Id> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "XState({:?})", self.id)
     }
 }
-impl<Id: IdType + std::fmt::Debug + std::default::Default + std::cmp::Eq + std::hash::Hash + Copy> XState<Id> {
+impl<Id: IdType> XState<Id> {
     fn dummy_event_handler(context: &mut Context, event: &Event, task_event_sender: &mut EventSender) -> EventHandlerResponse<Id> {
         EventHandlerResponse::Unhandled
     }

@@ -59,65 +59,20 @@ pub enum Id {
     Error,
     Unknown,
 }
+impl IdType for Id {}
 impl Default for Id {
     fn default() -> Self { Id::Unknown }
 }
-impl IdType for Id {
-    fn as_any(&self) -> &dyn std::any::Any {
-        self
-    }
-}
-impl Default for &dyn IdType {
-    fn default() -> Self {
-        &Id::Unknown
-    }
-}
-impl PartialEq for &dyn IdType {
-    fn eq(&self, rhs: &&dyn IdType) -> bool {
-        let lhs = self.as_any().downcast_ref::<Id>();
-        let rhs = rhs.as_any().downcast_ref::<Id>();
-        match (lhs, rhs) {
-            (Some(lhs), Some(rhs)) => lhs == rhs,
-            _ => false
-        }
-    }
-}
-impl Eq for &dyn IdType {}
-impl std::hash::Hash for &dyn IdType {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        let lhs = self.as_any().downcast_ref::<Id>();
-        lhs.hash(state)
-    }
-}
-impl std::fmt::Debug for &'static dyn IdType {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        match self.as_any().downcast_ref::<Id>() {
-            Some(id) => write!(f, "{:?}", id),
-            None => write!(f, "IdType()"),
-        }
-    }
-}
-
 
 fn empty_event_handler(context: &mut Context, event: &Event, task_event_sender: &Option<&mut EventSender>) -> EventHandlerResponse<Id> {
     println!("Empty event handler called");
     EventHandlerResponse::Unhandled
 }
 
-fn needs_idtype(id: impl IdType) {
-    if let Some(test) = id.as_any().downcast_ref::<Id>() {
-        println!("{:?}", test);
-    }
-}
-
 pub async fn run() {
 
     // test
     println!("Start");
-
-
-    needs_idtype(Id::Root);
-
 
     let machine_states = vec![
         XState {

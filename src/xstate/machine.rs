@@ -8,7 +8,7 @@ pub struct MachineStructure<'a, Id: 'static + IdType> {
     pub map: StatesMap<'a, Id>,
     pub parents: ParentsMap<Id>,
 }
-impl<Id: IdType + std::cmp::Eq + std::hash::Hash> MachineStructure<'_, Id> {
+impl<Id: IdType> MachineStructure<'_, Id> {
     pub fn get_parent(&self, state_id: Id) -> Option<&XState<Id>> {
         let parent_id = match self.parents.get(&state_id) {
             Some(Some(parent_id)) => parent_id,
@@ -30,7 +30,7 @@ pub struct Machine<'a, Id: 'static + IdType> {
     event_sender: EventSender,
     event_receiver: EventReceiver,
 }
-impl<Id: IdType + std::fmt::Debug + std::default::Default + std::cmp::Eq + std::hash::Hash + Copy> Machine<'_, Id> {
+impl<Id: IdType> Machine<'_, Id> {
     pub fn new(context: Context, states: &Vec<XState<Id>>) -> Machine<Id> {
         let mut map = std::collections::HashMap::new();
         let mut parents_map = std::collections::HashMap::new();
