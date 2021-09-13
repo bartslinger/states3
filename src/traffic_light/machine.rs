@@ -1,53 +1,9 @@
 use tokio_stream::{StreamExt};
 
-use crate::xstate::xstate::{XState};
-use crate::xstate::{EventSender, TaskOutput, TaskError, EventHandlerResponse};
-use crate::xstate::machine::{Machine};
-use crate::xstate;
+use xstate::{Machine, XState, EventSender, EventHandlerResponse};
 
-use crate::traffic_light;
-
-#[derive(Debug)]
-pub struct Context {
-    pub button_press_counter: u32,
-}
-impl xstate::ContextType for Context {}
-
-#[derive(Debug)]
-pub enum Event {
-    PushButton,
-    Abort,
-    TaskDone(TaskOutput),
-    TaskError(TaskError),
-}
-impl xstate::EventType for Event {
-
-    fn task_done(res: TaskOutput) -> Self {
-        Event::TaskDone(res)
-    }
-    
-    fn task_error(err: TaskError) -> Self {
-        Event::TaskError(err)
-    }
-}
-
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
-pub enum Id {
-    Root,
-    Initializing,
-    Running,
-    Idle,
-    TrafficLightRed,
-    TrafficLightYellow,
-    TrafficLightGreen,
-    Done,
-    Error,
-    Unknown,
-}
-impl xstate::IdType for Id {}
-impl Default for Id {
-    fn default() -> Self { Id::Unknown }
-}
+use super::types::{Id, Context, Event};
+use super::states;
 
 fn empty_event_handler(context: &mut Context, event: &Event, task_event_sender: &Option<&mut EventSender<Event>>) -> EventHandlerResponse<Id> {
     println!("Empty event handler called");
@@ -71,7 +27,7 @@ pub async fn run() {
                     event_handler: &empty_event_handler,
                     states: vec![],
                 },
-                traffic_light::red_state::new(),
+                states::red_state::new(),
             ]
         },
     ];

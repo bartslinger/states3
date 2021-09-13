@@ -1,5 +1,9 @@
+#![allow(unused_variables, dead_code, unreachable_code)]
 pub mod machine;
 pub mod xstate;
+
+pub type XState<'i, 'h, Id, Context, Event> = xstate::XState<'i, 'h, Id, Context, Event>;
+pub type Machine<'s, 'i, 'h, Id, Context, Event> = machine::Machine<'s, 'i, 'h, Id, Context, Event>;
 
 pub type TaskResult = Result<TaskOutput, TaskError>;
 pub type InvokeFunction = std::pin::Pin<Box<dyn std::future::Future<Output = TaskResult> + Send + Sync>>;

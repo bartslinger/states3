@@ -1,6 +1,6 @@
-use crate::xstate::xstate::XState;
-use crate::xstate::{InvokeFunction, EventReceiver, EventSender, TaskOutput, EventHandlerResponse};
-use crate::xstate_user::{Id, Context, Event};
+use xstate::{XState, InvokeFunction, EventReceiver, EventSender, TaskOutput, EventHandlerResponse};
+
+use super::types::{Id, Context, Event};
 
 pub mod red_state {
     use super::*;
