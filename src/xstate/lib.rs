@@ -11,6 +11,7 @@ pub type InvokeFunctionProvider<'i, Context, Event> = &'i (dyn Fn(&mut Context, 
 
 pub type EventSender<Event> = tokio::sync::mpsc::Sender<Event>;
 pub type EventReceiver<Event> = tokio::sync::mpsc::Receiver<Event>;
+pub type EventHandlerFunction<Id, Context, Event> = fn(&mut Context, &Event, &Option<&mut EventSender<Event>>) -> EventHandlerResponse<Id>;
 pub type EventHandler<'h, Id, Context, Event> = &'h dyn Fn(&mut Context, &Event, &Option<&mut EventSender<Event>>) -> EventHandlerResponse<Id>;
 
 pub trait IdType: 'static + std::fmt::Debug + std::default::Default + std::cmp::Eq + std::hash::Hash + Copy {}

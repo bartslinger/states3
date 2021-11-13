@@ -13,7 +13,7 @@ pub async fn run() {
 
     // test
     println!("Start");
-
+    
     let machine_states = vec![
         XState {
             id: Id::Root,
